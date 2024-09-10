@@ -10,9 +10,9 @@
 | Captain     |  ng52@illinois.edu     |
 | Member1     |     Ashrith Anumala    |
 | Member1     |   anumala3@illinois.edu|
-| Member2     |                        |
+| Member2     |      Antanas Rishko    |
 | Member2     |  arishko2@illinois.edu |
-| Member3     |                        |
+| Member3     |    Varshitha Akella    |
 | Member3     |  vakella2@illinois.edu |
 
 ## Project Information
