@@ -9,7 +9,7 @@
 | Captain     |       Naman Goyal      |
 | Captain     |  ng52@illinois.edu     |
 | Member1     |     Ashrith Anumala    |
-| Member1     |     |
+| Member1     |   anumala3@illinois.edu|
 | Member2     |     Ti-Chung Cheng     |
 | Member2     |  tichung3@illinois.edu |
 | Member3     |                        |
