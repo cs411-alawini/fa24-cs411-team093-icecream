@@ -1,0 +1,33 @@
+team_id,team_name,city,wins,losses,ties
+1,Lions,Detroit,13,4,0
+2,Bears,Chicago,15,2,0
+3,Packers,Green Bay,11,6,0
+4,Vikings,Minneapolis,1,15,1
+5,Eagles,Philadelphia,2,15,0
+6,Patriots,New England,1,16,0
+7,Giants,New York,1,16,0
+8,Cowboys,Dallas,10,7,0
+9,49ers,San Francisco,5,11,1
+10,Seahawks,Seattle,2,14,1
+11,Rams,Los Angeles,2,14,1
+12,Cardinals,Arizona,10,6,1
+13,Buccaneers,Tampa Bay,7,9,1
+14,Saints,New Orleans,3,13,1
+15,Falcons,Atlanta,12,5,0
+16,Panthers,Carolina,1,16,0
+17,Bills,Buffalo,10,7,0
+18,Dolphins,Miami,5,11,1
+19,Jets,New York,10,6,1
+20,Commanders,Washington,0,16,1
+21,Ravens,Baltimore,5,11,1
+22,Steelers,Pittsburgh,11,5,1
+23,Bengals,Cincinnati,7,10,0
+24,Browns,Cleveland,10,7,0
+25,Titans,Tennessee,8,8,1
+26,Texans,Houston,14,2,1
+27,Jaguars,Jacksonville,0,16,1
+28,Colts,Indianapolis,9,8,0
+29,Raiders,Las Vegas,2,14,1
+30,Chargers,Los Angeles,4,13,0
+31,Chiefs,Kansas City,11,6,0
+32,Broncos,Denver,8,9,0
