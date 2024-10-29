@@ -1,0 +1,34 @@
+team_abbr,team_name,city,wins,losses,ties
+LA,Los Angeles Rams,"Inglewood, California",3,5,0
+ATL,Atlanta Falcons,"Atlanta, Georgia",4,5,0
+CAR,Carolina Panthers,"Charlotte, North Carolina",2,7,0
+CHI,Chicago Bears,"Chicago, Illinois",3,6,0
+CIN,Cincinnati Bengals,"Cincinnati, Ohio",5,4,0
+DET,Detroit Lions,"Detroit, Michigan",2,6,0
+HOU,Houston Texans,"Houston, Texas",1,6,1
+MIA,Miami Dolphins,"Miami Gardens, Florida",6,3,0
+NYJ,New York Jets,"East Rutherford, New Jersey",6,3,0
+WAS,Washington Commanders,"Landover, Maryland",4,5,0
+ARI,Arizona Cardinals,"Glendale, Arizona",3,6,0
+LAC,Los Angeles Chargers,"Inglewood, California",5,3,0
+MIN,Minnesota Vikings,"Minneapolis, Minnesota",7,1,0
+TEN,Tennessee Titans,"Nashville, Tennessee",5,3,0
+DAL,Dallas Cowboys,"Arlington, Texas",6,2,0
+SEA,Seattle Seahawks,"Seattle, Washington",6,3,0
+KC,Kansas City Chiefs,"Kansas City, Missouri",6,2,0
+BAL,Baltimore Ravens,"Baltimore, Maryland",6,3,0
+CLE,Cleveland Browns,"Cleveland, Ohio",3,5,0
+JAX,Jacksonville Jaguars,"Jacksonville, Florida",3,6,0
+NO,New Orleans Saints,"New Orleans, Louisiana",3,6,0
+NYG,New York Giants,"East Rutherford, New Jersey",6,2,0
+PIT,Pittsburgh Steelers,"Pittsburgh, Pennsylvania",2,6,0
+SF,San Francisco 49ers,"Santa Clara, California",4,4,0
+DEN,Denver Broncos,"Denver, Colorado",3,5,0
+LV,Las Vegas Raiders,"Paradise, Nevada",2,6,0
+GB,Green Bay Packers,"Green Bay, Wisconsin",3,6,0
+BUF,Buffalo Bills,"Orchard Park, New York",6,2,0
+PHI,Philadelphia Eagles,"Philadelphia, Pennsylvania",8,0,0
+IND,Indianapolis Colts,"Indianapolis, Indiana",3,5,1
+NE,New England Patriots,"Foxborough, Massachusetts",5,4,0
+TB,Tampa Bay Buccaneers,"Tampa, Florida",4,5,0
+
