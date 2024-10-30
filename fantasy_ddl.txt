@@ -39,8 +39,8 @@ CREATE TABLE FantasyTeam (
 
 CREATE TABLE Games ( 
     game_id INT PRIMARY KEY, 
-	home_team INT,
-	away_team INT,
+    home_team INT,
+    away_team INT,
     points_scored INT, 
     passing_yards INT, 
     rushing_yards INT, 
