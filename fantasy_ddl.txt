@@ -3,14 +3,14 @@ CREATE DATABASE FantasyResearchAssistant;
 USE FantasyResearchAssistant;
 
 CREATE TABLE UserInfo (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT PRIMARY KEY,
     username VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL,
     password VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE Team (
-    team_id INT AUTO_INCREMENT PRIMARY KEY,
+    team_id INT PRIMARY KEY,
     team_name VARCHAR(100) NOT NULL,
     city VARCHAR(100) NOT NULL,
     wins INT DEFAULT 0,
@@ -30,22 +30,24 @@ CREATE TABLE Player (
 );
 
 CREATE TABLE FantasyTeam (
-    fantasy_team_id INT AUTO_INCREMENT PRIMARY KEY,
+    fantasy_team_id INT PRIMARY KEY,
     user_id INT,
     fantasy_team_name VARCHAR(100) NOT NULL,
     roster_size INT,
     FOREIGN KEY (user_id) REFERENCES UserInfo(user_id)
 );
 
-CREATE TABLE Games (
-    game_id INT PRIMARY KEY,
-    team_id INT,
-    points_scored INT,
-    passing_yards INT,
-    rushing_yards INT,
-    receiving_yards INT,
-    touchdowns INT,
-    receptions INT,
-    fumbles_lost INT,
-    expected_points INT
+CREATE TABLE Games ( 
+    game_id INT PRIMARY KEY, 
+	Home_team INT,
+	away_team INT,
+    points_scored INT, 
+    passing_yards INT, 
+    rushing_yards INT, 
+    receiving_yards INT, 
+    touchdowns INT, 
+    receptions INT, 
+    fumbles_lost INT, 
+    expected_points INT 
 );
+
