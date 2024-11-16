@@ -66,7 +66,7 @@ app.post('/register', function(req, res) {
     });
 });
 
-// User login route
+
 app.post('/login', function (req, res) {
     const { username, password } = req.body;
 
@@ -94,11 +94,12 @@ app.post('/login', function (req, res) {
                 return;
             }
 
-            // Successful login, redirect to personalized page
-            res.redirect(`/FantasyResearchAssistant/${username}`);
+            // Successful login, redirect to the user's manage page
+            res.redirect(`/FantasyResearchAssistant/${username}/manage`);
         });
     });
 });
+
 
 
 app.get('/FantasyResearchAssistant/:username', (req, res) => {
