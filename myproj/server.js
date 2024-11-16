@@ -103,14 +103,14 @@ app.post('/login', function (req, res) {
 
 app.get('/FantasyResearchAssistant/:username', (req, res) => {
     const username = req.params.username;
-    
+
     const sql = `SELECT * FROM UserInfo WHERE username = ?`;
     connection.query(sql, [username], function (err, results) {
         if (err || results.length === 0) {
             return res.status(404).send('User not found');
         }
 
-        // Serve the personalized page with a logout button
+        // Serve the personalized page with properly styled buttons
         res.send(`
             <!DOCTYPE html>
             <html lang="en">
@@ -132,6 +132,7 @@ app.get('/FantasyResearchAssistant/:username', (req, res) => {
                     }
                     h1 {
                         color: #333;
+                        margin-bottom: 20px;
                     }
                     .logout-btn {
                         position: absolute;
@@ -145,21 +146,107 @@ app.get('/FantasyResearchAssistant/:username', (req, res) => {
                         font-size: 14px;
                         cursor: pointer;
                         text-decoration: none;
-                        display: inline-block;
                     }
                     .logout-btn:hover {
                         background-color: #ff1a1a;
+                    }
+                    .manage-btn {
+                        background-color: #4CAF50;
+                        color: white;
+                        border: none;
+                        padding: 10px 15px;
+                        border-radius: 5px;
+                        font-size: 16px;
+                        cursor: pointer;
+                        text-decoration: none;
+                        margin-top: 20px;
+                    }
+                    .manage-btn:hover {
+                        background-color: #45a049;
                     }
                 </style>
             </head>
             <body>
                 <a href="/FantasyResearchAssistant/login" class="logout-btn">Logout</a>
                 <h1>Welcome, ${username}! You are logged in.</h1>
+                <a href="/FantasyResearchAssistant/${username}/manage" class="manage-btn">Manage Fantasy Teams</a>
             </body>
             </html>
         `);
     });
 });
+
+
+app.get('/FantasyResearchAssistant/:username/manage', (req, res) => {
+    const username = req.params.username;
+
+    // Serve the Manage Fantasy Teams page
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Manage Fantasy Teams</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100vh;
+                    margin: 0;
+                    background-color: #f4f4f4;
+                }
+                h1 {
+                    color: #333;
+                    margin-bottom: 20px;
+                }
+                .button {
+                    background-color: #007BFF;
+                    color: white;
+                    border: none;
+                    padding: 15px 20px;
+                    margin: 10px;
+                    border-radius: 5px;
+                    font-size: 16px;
+                    cursor: pointer;
+                    text-decoration: none;
+                    text-align: center;
+                }
+                .button:hover {
+                    background-color: #0056b3;
+                }
+                .logout-btn {
+                        position: absolute;
+                        top: 20px;
+                        right: 20px;
+                        background-color: #ff4d4d;
+                        color: white;
+                        border: none;
+                        padding: 10px 15px;
+                        border-radius: 5px;
+                        font-size: 14px;
+                        cursor: pointer;
+                        text-decoration: none;
+                    }
+                .logout-btn:hover {
+                    background-color: #ff1a1a;
+                }
+            </style>
+        </head>
+        <body>
+            <a href="/FantasyResearchAssistant/login" class="logout-btn">Logout</a>
+            <h1>Manage Fantasy Teams</h1>
+            <a href="/FantasyResearchAssistant/${username}/create-team" class="button">Create Fantasy Team</a>
+            <a href="/FantasyResearchAssistant/${username}/delete-team" class="button">Delete Fantasy Team</a>
+        </body>
+        </html>
+    `);
+});
+
+
 
 
 // Start the server
