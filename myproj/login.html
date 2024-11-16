@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantasy Research Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            font-size: 14px;
+            margin-bottom: 5px;
+            display: block;
+        }
+        input[type="text"], input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .footer a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Fantasy Research Assistant</h2>
+        
+        <!-- Login Form -->
+        <form id="loginForm" action="/login" method="POST">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required placeholder="Enter your username">
+            
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required placeholder="Enter your password">
+            
+            <button type="submit">Login</button>
+        </form>
+
+        <div class="footer">
+            <p>Don't have an account? <a href="#" onclick="showRegisterForm()">Create an account</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Show the register form
+        function showRegisterForm() {
+            document.getElementById("loginForm").action = "/register";
+            document.getElementById("loginForm").reset();
+            document.querySelector("h2").textContent = "Create Account";
+            document.querySelector("button").textContent = "Register";
+            document.querySelector(".footer p").innerHTML = 'Already have an account? <a href="#" onclick="showLoginForm()">Login</a>';
+
+            // Update fields to include email for registration
+            let usernameLabel = document.querySelector("label[for='username']");
+            usernameLabel.innerText = "Username:";
+            let emailLabel = document.createElement("label");
+            emailLabel.setAttribute("for", "email");
+            emailLabel.innerText = "Email:";
+            document.querySelector("#username").insertAdjacentElement("beforebegin", emailLabel);
+
+            let emailField = document.createElement("input");
+            emailField.type = "email";
+            emailField.id = "email";
+            emailField.name = "email";
+            emailField.required = true;
+            emailField.placeholder = "Enter your email";
+            document.querySelector("#username").insertAdjacentElement("beforebegin", emailField);
+        }
+
+        // Switch back to the login form
+        function showLoginForm() {
+            document.getElementById("loginForm").action = "/login";
+            document.getElementById("loginForm").reset();
+            document.querySelector("h2").textContent = "Fantasy Research Assistant";
+            document.querySelector("button").textContent = "Login";
+            document.querySelector(".footer p").innerHTML = 'Don\'t have an account? <a href="#" onclick="showRegisterForm()">Create an account</a>';
+
+            // Revert changes for the registration form
+            let emailField = document.querySelector("#email");
+            if (emailField) emailField.remove();
+            let emailLabel = document.querySelector("label[for='email']");
+            if (emailLabel) emailLabel.remove();
+        }
+    </script>
+</body>
+</html>
