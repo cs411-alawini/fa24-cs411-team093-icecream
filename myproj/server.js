@@ -110,7 +110,6 @@ app.get('/FantasyResearchAssistant/:username', (req, res) => {
             return res.status(404).send('User not found');
         }
 
-        // Serve the personalized page with properly styled buttons
         res.send(`
             <!DOCTYPE html>
             <html lang="en">
@@ -180,14 +179,121 @@ app.get('/FantasyResearchAssistant/:username', (req, res) => {
 app.get('/FantasyResearchAssistant/:username/manage', (req, res) => {
     const username = req.params.username;
 
-    // Serve the Manage Fantasy Teams page
+    // Fetch user_id based on username
+    const userSql = `SELECT user_id FROM UserInfo WHERE username = ?`;
+    connection.query(userSql, [username], (err, userResult) => {
+        if (err || userResult.length === 0) {
+            res.status(500).send('<h1>Error fetching user information.</h1>');
+            return;
+        }
+
+        const userId = userResult[0].user_id;
+
+        // Fetch all fantasy teams for this user
+        const teamSql = `SELECT fantasy_team_id, fantasy_team_name, roster_size FROM FantasyTeam WHERE user_id = ?`;
+        connection.query(teamSql, [userId], (err, teamResults) => {
+            if (err) {
+                res.status(500).send('<h1>Error fetching fantasy teams.</h1>');
+                return;
+            }
+            // Generate HTML for the fantasy teams
+            const teamList = teamResults.map(team => `
+                <li>
+                    <strong>${team.fantasy_team_name}</strong> (Roster Size: ${team.roster_size})
+                </li>
+            `).join('');
+
+            // Serve the Manage Fantasy Teams page
+            res.send(`
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Manage Fantasy Teams</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            height: 100vh;
+                            margin: 0;
+                            background-color: #f4f4f4;
+                        }
+                        h1 {
+                            color: #333;
+                            margin-bottom: 20px;
+                        }
+                        .button {
+                            background-color: #007BFF;
+                            color: white;
+                            border: none;
+                            padding: 15px 20px;
+                            margin: 10px;
+                            border-radius: 5px;
+                            font-size: 16px;
+                            cursor: pointer;
+                            text-decoration: none;
+                            text-align: center;
+                        }
+                        .button:hover {
+                            background-color: #0056b3;
+                        }
+                        ul {
+                            list-style: none;
+                            padding: 0;
+                        }
+                        li {
+                            margin: 10px 0;
+                            font-size: 18px;
+                            color: #444;
+                        }
+                        .logout-btn {
+                            position: absolute;
+                            top: 20px;
+                            right: 20px;
+                            background-color: #ff4d4d;
+                            color: white;
+                            border: none;
+                            padding: 10px 15px;
+                            border-radius: 5px;
+                            font-size: 14px;
+                            cursor: pointer;
+                            text-decoration: none;
+                        }
+                        .logout-btn:hover {
+                            background-color: #ff1a1a;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <a href="/FantasyResearchAssistant/login" class="logout-btn">Logout</a>
+                    <h1>Manage Fantasy Teams</h1>
+                    <ul>
+                        ${teamList || '<li>No fantasy teams found.</li>'}
+                    </ul>
+                    <a href="/FantasyResearchAssistant/${username}/create-team" class="button">Create Fantasy Team</a>
+                    <a href="/FantasyResearchAssistant/${username}/delete-team" class="button">Delete Fantasy Team</a>
+                </body>
+                </html>
+            `);
+        });
+    });
+});
+
+app.get('/FantasyResearchAssistant/:username/create-team', (req, res) => {
+    const username = req.params.username;
+    
+    // Serve the Create Fantasy Team page with a form
     res.send(`
         <!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Manage Fantasy Teams</title>
+            <title>Create Fantasy Team</title>
             <style>
                 body {
                     font-family: Arial, sans-serif;
@@ -218,19 +324,32 @@ app.get('/FantasyResearchAssistant/:username/manage', (req, res) => {
                 .button:hover {
                     background-color: #0056b3;
                 }
+                input {
+                    padding: 10px;
+                    margin: 5px 0;
+                    font-size: 16px;
+                    width: 300px;
+                    border-radius: 5px;
+                    border: 1px solid #ccc;
+                }
+                label {
+                    font-size: 16px;
+                    margin: 10px 0 5px;
+                    display: inline-block;
+                }
                 .logout-btn {
-                        position: absolute;
-                        top: 20px;
-                        right: 20px;
-                        background-color: #ff4d4d;
-                        color: white;
-                        border: none;
-                        padding: 10px 15px;
-                        border-radius: 5px;
-                        font-size: 14px;
-                        cursor: pointer;
-                        text-decoration: none;
-                    }
+                    position: absolute;
+                    top: 20px;
+                    right: 20px;
+                    background-color: #ff4d4d;
+                    color: white;
+                    border: none;
+                    padding: 10px 15px;
+                    border-radius: 5px;
+                    font-size: 14px;
+                    cursor: pointer;
+                    text-decoration: none;
+                }
                 .logout-btn:hover {
                     background-color: #ff1a1a;
                 }
@@ -238,13 +357,248 @@ app.get('/FantasyResearchAssistant/:username/manage', (req, res) => {
         </head>
         <body>
             <a href="/FantasyResearchAssistant/login" class="logout-btn">Logout</a>
-            <h1>Manage Fantasy Teams</h1>
-            <a href="/FantasyResearchAssistant/${username}/create-team" class="button">Create Fantasy Team</a>
-            <a href="/FantasyResearchAssistant/${username}/delete-team" class="button">Delete Fantasy Team</a>
+            <h1>Create Fantasy Team</h1>
+            <form action="#" method="POST">
+                <label for="fantasy_team_name">Fantasy Team Name</label>
+                <input type="text" id="fantasy_team_name" name="fantasy_team_name" required>
+
+                <label for="roster_size">Roster Size</label>
+                <input type="number" id="roster_size" name="roster_size" min="1" required>
+
+                <button type="submit" class="button">Create Team</button>
+            </form>
+            <a href="/FantasyResearchAssistant/${username}/manage" class="button">Back to Manage Teams</a>
         </body>
         </html>
     `);
 });
+
+app.post('/FantasyResearchAssistant/:username/create-team', (req, res) => {
+    const username = req.params.username;
+    const { fantasy_team_name, roster_size } = req.body;  // Get form data from the body
+
+    // Fetch user_id based on the username
+    const userSql = `SELECT user_id FROM UserInfo WHERE username = ?`;
+    
+    connection.query(userSql, [username], (err, userResult) => {
+        if (err || userResult.length === 0) {
+            console.log("Error fetching user information for username:", username);
+            return res.status(500).send('<h1>Error fetching user information.</h1>');
+        }
+
+        const user_id = userResult[0].user_id;  // Get user_id from the query result
+
+        // Debugging: Log the fetched user_id
+        console.log("Fetched user_id:", user_id);
+
+        // If user_id is invalid, return an error
+        if (!user_id) {
+            console.log("Error: Invalid user ID.");
+            return res.status(400).send('<h1>Error: Invalid user ID.</h1>');
+        }
+
+        // Get the current maximum fantasy_team_id (this step is optional, since AUTO_INCREMENT handles this)
+        const maxFantasyTeamIdSql = `SELECT MAX(fantasy_team_id) AS max_team_id FROM FantasyTeam`;
+        
+        connection.query(maxFantasyTeamIdSql, (err, result) => {
+            if (err) {
+                console.log("Error fetching max fantasy_team_id:", err);
+                return res.status(500).send('<h1>Error fetching max fantasy_team_id.</h1>');
+            }
+
+            // Debugging: Log the max fantasy_team_id
+            console.log("Max Fantasy Team ID:", result[0].max_team_id);
+
+            // Get the next fantasy_team_id (Max ID + 1)
+            const nextFantasyTeamId = result[0].max_team_id ? result[0].max_team_id + 1 : 1;
+
+            // Insert the new fantasy team into the database, including the new fantasy_team_id
+            const insertSql = `
+                INSERT INTO FantasyTeam (fantasy_team_id, user_id, fantasy_team_name, roster_size)
+                VALUES (?, ?, ?, ?)
+            `;
+
+            connection.query(insertSql, [nextFantasyTeamId, user_id, fantasy_team_name, roster_size], (err, insertResult) => {
+                if (err) {
+                    console.log("Error inserting fantasy team:", err);
+                    return res.status(500).send('<h1>Error creating fantasy team.</h1>');
+                }
+
+                // Debugging: Log successful insert
+                console.log("Team created successfully:", insertResult);
+                
+                // Redirect to the Manage Fantasy Teams page after the team is created
+                res.redirect(`/FantasyResearchAssistant/${username}/manage`);
+            });
+        });
+    });
+});
+
+
+app.get('/FantasyResearchAssistant/:username/delete-team', (req, res) => {
+    const username = req.params.username;
+
+    // Fetch user_id based on username
+    const userSql = `SELECT user_id FROM UserInfo WHERE username = ?`;
+    connection.query(userSql, [username], (err, userResult) => {
+        if (err || userResult.length === 0) {
+            res.status(500).send('<h1>Error fetching user information.</h1>');
+            return;
+        }
+
+        const userId = userResult[0].user_id;
+
+        // Fetch all fantasy teams for this user
+        const teamSql = `SELECT fantasy_team_id, fantasy_team_name, roster_size FROM FantasyTeam WHERE user_id = ?`;
+        connection.query(teamSql, [userId], (err, teamResults) => {
+            if (err) {
+                res.status(500).send('<h1>Error fetching fantasy teams.</h1>');
+                return;
+            }
+
+            // Generate HTML for the fantasy teams in a table with checkboxes
+            const teamTable = teamResults.map(team => `
+                <tr>
+                    <td><input type="checkbox" name="team_id" value="${team.fantasy_team_id}"></td>
+                    <td>${team.fantasy_team_name}</td>
+                    <td>${team.roster_size}</td>
+                </tr>
+            `).join('');
+
+            // Serve the Delete Fantasy Team page with the table
+            res.send(`
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Delete Fantasy Team</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            height: 100vh;
+                            margin: 0;
+                            background-color: #f4f4f4;
+                        }
+                        h1 {
+                            color: #333;
+                            margin-bottom: 20px;
+                        }
+                        .button {
+                            background-color: #007BFF;
+                            color: white;
+                            border: none;
+                            padding: 15px 20px;
+                            margin: 10px;
+                            border-radius: 5px;
+                            font-size: 16px;
+                            cursor: pointer;
+                            text-decoration: none;
+                            text-align: center;
+                        }
+                        .button:hover {
+                            background-color: #0056b3;
+                        }
+                        table {
+                            width: 80%;
+                            margin-top: 20px;
+                            border-collapse: collapse;
+                        }
+                        th, td {
+                            padding: 10px;
+                            text-align: center;
+                            border: 1px solid #ddd;
+                        }
+                        th {
+                            background-color: #f2f2f2;
+                        }
+                        .logout-btn {
+                            position: absolute;
+                            top: 20px;
+                            right: 20px;
+                            background-color: #ff4d4d;
+                            color: white;
+                            border: none;
+                            padding: 10px 15px;
+                            border-radius: 5px;
+                            font-size: 14px;
+                            cursor: pointer;
+                            text-decoration: none;
+                        }
+                        .logout-btn:hover {
+                            background-color: #ff1a1a;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <a href="/FantasyResearchAssistant/login" class="logout-btn">Logout</a>
+                    <h1>Delete Fantasy Team</h1>
+                    <form action="/FantasyResearchAssistant/${username}/delete-team" method="POST">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Select</th>
+                                    <th>Fantasy Team Name</th>
+                                    <th>Roster Size</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${teamTable || '<tr><td colspan="3">No fantasy teams found.</td></tr>'}
+                            </tbody>
+                        </table>
+                        <button type="submit" class="button">Delete Selected Team</button>
+                    </form>
+                    <a href="/FantasyResearchAssistant/${username}/manage" class="button">Back to Manage Teams</a>
+                </body>
+                </html>
+            `);
+        });
+    });
+});
+
+app.post('/FantasyResearchAssistant/:username/delete-team', (req, res) => {
+    const username = req.params.username;
+    const teamId = req.body.team_id; // Get the selected team ID from the form
+
+    if (!teamId) {
+        return res.send(`
+            <script>
+                alert('No team selected for deletion.');
+                window.location.href = '/FantasyResearchAssistant/${username}/delete-team';
+            </script>
+        `);
+    }
+
+    // Delete the selected fantasy team from the database
+    const deleteSql = `DELETE FROM FantasyTeam WHERE fantasy_team_id = ?`;
+
+    connection.query(deleteSql, [teamId], (err, result) => {
+        if (err) {
+            console.log("Error deleting fantasy team:", err);
+            return res.send(`
+                <script>
+                    alert('Error deleting fantasy team.');
+                    window.location.href = '/FantasyResearchAssistant/${username}/manage';
+                </script>
+            `);
+        }
+
+        // Redirect to the Manage Fantasy Teams page after deletion
+        res.send(`
+            <script>
+                alert('Fantasy team deleted successfully.');
+                window.location.href = '/FantasyResearchAssistant/${username}/manage';
+            </script>
+        `);
+    });
+});
+
+
+
 
 
 
