@@ -575,51 +575,139 @@ app.get('/FantasyResearchAssistant/:username/highest-scoring-player', (req, res)
     });
 });
 
-
 app.get('/FantasyResearchAssistant/:username/most-consistent-player', (req, res) => {
     const { username } = req.params;
-    res.send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Most Consistent Player</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    height: 100vh;
-                    margin: 0;
-                    background-color: #f4f4f4;
-                }
-                .button {
-                    background-color: #007BFF;
-                    color: white;
-                    border: none;
-                    padding: 15px 20px;
-                    margin: 10px;
-                    border-radius: 5px;
-                    font-size: 16px;
-                    cursor: pointer;
-                    text-decoration: none;
-                    text-align: center;
-                }
-                .button:hover {
-                    background-color: #0056b3;
-                }
-            </style>
-        </head>
-        <body>
-            <h1>Most Consistent Player</h1>
-            <a href="/FantasyResearchAssistant/${username}/manage" class="button">Back</a>
-        </body>
-        </html>
-    `);
+    const limit = req.query.limit || 15; // Default to 15 players if not provided
+
+    // SQL query to fetch the most consistent players
+    const query = `
+        SELECT 
+            p.name AS player_name,
+            p.position,
+            t.team_name,
+            STDDEV(g.points_scored) AS points_consistency
+        FROM 
+            Player p
+        JOIN 
+            Games g ON p.player_id = g.player_id
+        JOIN 
+            Team t ON p.team_id = t.team_id
+        GROUP BY 
+            p.player_id, p.position, t.team_name
+        HAVING 
+            COUNT(g.game_id) > 1  -- Ensure player has multiple games for consistency measure
+        ORDER BY 
+            points_consistency ASC
+        LIMIT ?;
+    `;
+
+    // Execute the query
+    connection.query(query, [parseInt(limit)], (err, results) => {
+        if (err) {
+            console.error("Error executing query:", err);
+            res.status(500).send('<h1>Error fetching most consistent players.</h1>');
+            return;
+        }
+
+        // Generate HTML table for results
+        const playerTable = results.map(player => `
+            <tr>
+                <td>${player.player_name}</td>
+                <td>${player.position}</td>
+                <td>${player.team_name}</td>
+                <td>${player.points_consistency.toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+        // Send the HTML response
+        res.send(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Most Consistent Player</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: flex-start;
+                        height: 100vh;
+                        margin: 0;
+                        background-color: #f4f4f4;
+                        padding: 20px;
+                    }
+                    h1 {
+                        margin-bottom: 20px;
+                    }
+                    form {
+                        margin-bottom: 20px;
+                    }
+                    input[type="number"] {
+                        padding: 5px;
+                        font-size: 16px;
+                        width: 60px;
+                    }
+                    table {
+                        border-collapse: collapse;
+                        width: 80%;
+                        margin-top: 20px;
+                    }
+                    th, td {
+                        border: 1px solid #ddd;
+                        text-align: center;
+                        padding: 8px;
+                    }
+                    th {
+                        background-color: #007BFF;
+                        color: white;
+                    }
+                    .button {
+                        background-color: #007BFF;
+                        color: white;
+                        border: none;
+                        padding: 10px 15px;
+                        margin-top: 20px;
+                        border-radius: 5px;
+                        font-size: 16px;
+                        cursor: pointer;
+                        text-decoration: none;
+                        text-align: center;
+                    }
+                    .button:hover {
+                        background-color: #0056b3;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Most Consistent Players</h1>
+                <form method="get" action="/FantasyResearchAssistant/${username}/most-consistent-player">
+                    <label for="limit">Number of Players:</label>
+                    <input type="number" id="limit" name="limit" value="${limit}" min="1">
+                    <button type="submit" class="button">Update</button>
+                </form>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Player Name</th>
+                            <th>Position</th>
+                            <th>Team Name</th>
+                            <th>Points Consistency (STDDEV)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${playerTable || '<tr><td colspan="4">No players found.</td></tr>'}
+                    </tbody>
+                </table>
+                <a href="/FantasyResearchAssistant/${username}/manage" class="button">Back</a>
+            </body>
+            </html>
+        `);
+    });
 });
+
 
 app.get('/FantasyResearchAssistant/:username/total-fantasy-points', (req, res) => {
     const { username } = req.params;
