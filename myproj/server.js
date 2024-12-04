@@ -711,13 +711,142 @@ app.get('/FantasyResearchAssistant/:username/most-consistent-player', (req, res)
 
 app.get('/FantasyResearchAssistant/:username/total-fantasy-points', (req, res) => {
     const { username } = req.params;
+
+    // Query to calculate total fantasy points
+    const query = `
+        SELECT 
+            p.player_id,
+            p.name AS player_name,
+            t.team_name AS team,
+            SUM(
+                (g.rushing_yards / 10) +
+                (g.receiving_yards / 10) +
+                (g.passing_yards / 25) +
+                (g.touchdowns * 6) +
+                (g.receptions * 1) -
+                (g.fumbles_lost * 2)
+            ) AS total_fantasy_points
+        FROM 
+            Player p
+        JOIN 
+            Games g ON p.player_id = g.player_id
+        JOIN 
+            Team t ON p.team_id = t.team_id
+        GROUP BY 
+            p.player_id, p.name, t.team_name
+        ORDER BY 
+            total_fantasy_points DESC;
+    `;
+
+    // Connect to the database and execute the query
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error("Error executing query:", err);
+            res.status(500).send('<h1>Error fetching total fantasy points.</h1>');
+            return;
+        }
+
+        // Generate HTML table for results
+        const fantasyPointsTable = results.map(player => `
+            <tr>
+                <td>${player.player_id}</td>
+                <td>${player.player_name}</td>
+                <td>${player.team}</td>
+                <td>${parseFloat(player.total_fantasy_points).toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+        // Send response
+        res.send(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Total Fantasy Points</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: flex-start;
+                        height: 100vh;
+                        margin: 0;
+                        background-color: #f4f4f4;
+                        padding: 20px;
+                    }
+                    h1 {
+                        margin-bottom: 20px;
+                    }
+                    table {
+                        border-collapse: collapse;
+                        width: 80%;
+                        margin-top: 20px;
+                    }
+                    th, td {
+                        border: 1px solid #ddd;
+                        text-align: center;
+                        padding: 8px;
+                    }
+                    th {
+                        background-color: #007BFF;
+                        color: white;
+                    }
+                    .button {
+                        background-color: #007BFF;
+                        color: white;
+                        border: none;
+                        padding: 10px 15px;
+                        margin-top: 20px;
+                        border-radius: 5px;
+                        font-size: 16px;
+                        cursor: pointer;
+                        text-decoration: none;
+                        text-align: center;
+                    }
+                    .button:hover {
+                        background-color: #0056b3;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Total Fantasy Points</h1>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Player ID</th>
+                            <th>Player Name</th>
+                            <th>Team</th>
+                            <th>Total Fantasy Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${fantasyPointsTable || '<tr><td colspan="4">No players found.</td></tr>'}
+                    </tbody>
+                </table>
+                <a href="/FantasyResearchAssistant/${username}/manage" class="button">Back</a>
+            </body>
+            </html>
+        `);
+    });
+});
+
+  
+
+
+
+app.get('/FantasyResearchAssistant/:username/create-team', (req, res) => {
+    const username = req.params.username;
+    
+    // Serve the Create Fantasy Team page with a form
     res.send(`
         <!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Total Fantasy Points</title>
+            <title>Create Fantasy Team</title>
             <style>
                 body {
                     font-family: Arial, sans-serif;
@@ -728,6 +857,10 @@ app.get('/FantasyResearchAssistant/:username/total-fantasy-points', (req, res) =
                     height: 100vh;
                     margin: 0;
                     background-color: #f4f4f4;
+                }
+                h1 {
+                    color: #333;
+                    margin-bottom: 20px;
                 }
                 .button {
                     background-color: #007BFF;
@@ -744,11 +877,50 @@ app.get('/FantasyResearchAssistant/:username/total-fantasy-points', (req, res) =
                 .button:hover {
                     background-color: #0056b3;
                 }
+                input {
+                    padding: 10px;
+                    margin: 5px 0;
+                    font-size: 16px;
+                    width: 300px;
+                    border-radius: 5px;
+                    border: 1px solid #ccc;
+                }
+                label {
+                    font-size: 16px;
+                    margin: 10px 0 5px;
+                    display: inline-block;
+                }
+                .logout-btn {
+                    position: absolute;
+                    top: 20px;
+                    right: 20px;
+                    background-color: #ff4d4d;
+                    color: white;
+                    border: none;
+                    padding: 10px 15px;
+                    border-radius: 5px;
+                    font-size: 14px;
+                    cursor: pointer;
+                    text-decoration: none;
+                }
+                .logout-btn:hover {
+                    background-color: #ff1a1a;
+                }
             </style>
         </head>
         <body>
-            <h1>Total Fantasy Points</h1>
-            <a href="/FantasyResearchAssistant/${username}/manage" class="button">Back</a>
+            <a href="/FantasyResearchAssistant/login" class="logout-btn">Logout</a>
+            <h1>Create Fantasy Team</h1>
+            <form action="#" method="POST">
+                <label for="fantasy_team_name">Fantasy Team Name</label>
+                <input type="text" id="fantasy_team_name" name="fantasy_team_name" required>
+
+                <label for="roster_size">Roster Size</label>
+                <input type="number" id="roster_size" name="roster_size" min="1" required>
+
+                <button type="submit" class="button">Create Team</button>
+            </form>
+            <a href="/FantasyResearchAssistant/${username}/manage" class="button">Back to Manage Teams</a>
         </body>
         </html>
     `);
