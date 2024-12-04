@@ -434,48 +434,147 @@ app.get('/FantasyResearchAssistant/:username/best-player', (req, res) => {
 
 app.get('/FantasyResearchAssistant/:username/highest-scoring-player', (req, res) => {
     const { username } = req.params;
-    res.send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Highest Scoring Player</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    height: 100vh;
-                    margin: 0;
-                    background-color: #f4f4f4;
-                }
-                .button {
-                    background-color: #007BFF;
-                    color: white;
-                    border: none;
-                    padding: 15px 20px;
-                    margin: 10px;
-                    border-radius: 5px;
-                    font-size: 16px;
-                    cursor: pointer;
-                    text-decoration: none;
-                    text-align: center;
-                }
-                .button:hover {
-                    background-color: #0056b3;
-                }
-            </style>
-        </head>
-        <body>
-            <h1>Highest Scoring Player</h1>
-            <a href="/FantasyResearchAssistant/${username}/manage" class="button">Back</a>
-        </body>
-        </html>
-    `);
+
+    // SQL query to fetch highest-scoring player(s) by team
+    const query = `
+        SELECT 
+            team_name,
+            player_name,
+            total_points
+        FROM 
+            (SELECT 
+                T.team_name,
+                P.name AS player_name,
+                SUM(G.points_scored) AS total_points
+            FROM 
+                Player P
+            JOIN 
+                Team T ON P.team_id = T.team_id
+            JOIN 
+                Games G ON P.player_id = G.player_id
+            GROUP BY 
+                T.team_name, P.name
+            HAVING 
+                SUM(G.points_scored) > 250) AS Points
+        WHERE 
+            (team_name, total_points) IN (
+                SELECT 
+                    team_name, MAX(total_points)
+                FROM 
+                    (SELECT 
+                        T.team_name,
+                        P.name AS player_name,
+                        SUM(G.points_scored) AS total_points
+                    FROM 
+                        Player P
+                    JOIN 
+                        Team T ON P.team_id = T.team_id
+                    JOIN 
+                        Games G ON P.player_id = G.player_id
+                    GROUP BY 
+                        T.team_name, P.name
+                    HAVING 
+                        SUM(G.points_scored) > 250) AS TeamPlayerPoints
+                GROUP BY 
+                    team_name
+            )
+        ORDER BY 
+            team_name
+        LIMIT 15;
+    `;
+
+    // Execute the query and handle the response
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error("Error executing query:", err);
+            res.status(500).send('<h1>Error fetching highest-scoring players.</h1>');
+            return;
+        }
+
+        // Generate HTML table for results
+        const playerTable = results.map(player => `
+            <tr>
+                <td>${player.team_name}</td>
+                <td>${player.player_name}</td>
+                <td>${player.total_points}</td>
+            </tr>
+        `).join('');
+
+        // Send response
+        res.send(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Highest Scoring Player</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: flex-start;
+                        height: 100vh;
+                        margin: 0;
+                        background-color: #f4f4f4;
+                        padding: 20px;
+                    }
+                    h1 {
+                        margin-bottom: 20px;
+                    }
+                    table {
+                        border-collapse: collapse;
+                        width: 80%;
+                        margin-top: 20px;
+                    }
+                    th, td {
+                        border: 1px solid #ddd;
+                        text-align: center;
+                        padding: 8px;
+                    }
+                    th {
+                        background-color: #007BFF;
+                        color: white;
+                    }
+                    .button {
+                        background-color: #007BFF;
+                        color: white;
+                        border: none;
+                        padding: 10px 15px;
+                        margin-top: 20px;
+                        border-radius: 5px;
+                        font-size: 16px;
+                        cursor: pointer;
+                        text-decoration: none;
+                        text-align: center;
+                    }
+                    .button:hover {
+                        background-color: #0056b3;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Highest Scoring Players</h1>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Team Name</th>
+                            <th>Player Name</th>
+                            <th>Total Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${playerTable || '<tr><td colspan="3">No players found.</td></tr>'}
+                    </tbody>
+                </table>
+                <a href="/FantasyResearchAssistant/${username}/manage" class="button">Back</a>
+            </body>
+            </html>
+        `);
+    });
 });
+
 
 app.get('/FantasyResearchAssistant/:username/most-consistent-player', (req, res) => {
     const { username } = req.params;
