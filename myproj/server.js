@@ -277,12 +277,202 @@ app.get('/FantasyResearchAssistant/:username/manage', (req, res) => {
                     </ul>
                     <a href="/FantasyResearchAssistant/${username}/create-team" class="button">Create Fantasy Team</a>
                     <a href="/FantasyResearchAssistant/${username}/delete-team" class="button">Delete Fantasy Team</a>
+                    <a href="/FantasyResearchAssistant/${username}/best-player" class="button">Best Player</a>
+                    <a href="/FantasyResearchAssistant/${username}/highest-scoring-player" class="button">Highest Scoring Player</a>
+                    <a href="/FantasyResearchAssistant/${username}/most-consistent-player" class="button">Most Consistent Player</a>
+                    <a href="/FantasyResearchAssistant/${username}/total-fantasy-points" class="button">Total Points</a>
                 </body>
                 </html>
             `);
         });
     });
 });
+
+
+
+app.get('/FantasyResearchAssistant/:username/best-player', (req, res) => {
+    const { username } = req.params;
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Best Player</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100vh;
+                    margin: 0;
+                    background-color: #f4f4f4;
+                }
+                .button {
+                    background-color: #007BFF;
+                    color: white;
+                    border: none;
+                    padding: 15px 20px;
+                    margin: 10px;
+                    border-radius: 5px;
+                    font-size: 16px;
+                    cursor: pointer;
+                    text-decoration: none;
+                    text-align: center;
+                }
+                .button:hover {
+                    background-color: #0056b3;
+                }
+            </style>
+        </head>
+        <body>
+            <h1>Best Player</h1>
+            <a href="/FantasyResearchAssistant/${username}/manage" class="button">Back</a>
+        </body>
+        </html>
+    `);
+});
+
+app.get('/FantasyResearchAssistant/:username/highest-scoring-player', (req, res) => {
+    const { username } = req.params;
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Highest Scoring Player</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100vh;
+                    margin: 0;
+                    background-color: #f4f4f4;
+                }
+                .button {
+                    background-color: #007BFF;
+                    color: white;
+                    border: none;
+                    padding: 15px 20px;
+                    margin: 10px;
+                    border-radius: 5px;
+                    font-size: 16px;
+                    cursor: pointer;
+                    text-decoration: none;
+                    text-align: center;
+                }
+                .button:hover {
+                    background-color: #0056b3;
+                }
+            </style>
+        </head>
+        <body>
+            <h1>Highest Scoring Player</h1>
+            <a href="/FantasyResearchAssistant/${username}/manage" class="button">Back</a>
+        </body>
+        </html>
+    `);
+});
+
+app.get('/FantasyResearchAssistant/:username/most-consistent-player', (req, res) => {
+    const { username } = req.params;
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Most Consistent Player</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100vh;
+                    margin: 0;
+                    background-color: #f4f4f4;
+                }
+                .button {
+                    background-color: #007BFF;
+                    color: white;
+                    border: none;
+                    padding: 15px 20px;
+                    margin: 10px;
+                    border-radius: 5px;
+                    font-size: 16px;
+                    cursor: pointer;
+                    text-decoration: none;
+                    text-align: center;
+                }
+                .button:hover {
+                    background-color: #0056b3;
+                }
+            </style>
+        </head>
+        <body>
+            <h1>Most Consistent Player</h1>
+            <a href="/FantasyResearchAssistant/${username}/manage" class="button">Back</a>
+        </body>
+        </html>
+    `);
+});
+
+app.get('/FantasyResearchAssistant/:username/total-fantasy-points', (req, res) => {
+    const { username } = req.params;
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Total Fantasy Points</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100vh;
+                    margin: 0;
+                    background-color: #f4f4f4;
+                }
+                .button {
+                    background-color: #007BFF;
+                    color: white;
+                    border: none;
+                    padding: 15px 20px;
+                    margin: 10px;
+                    border-radius: 5px;
+                    font-size: 16px;
+                    cursor: pointer;
+                    text-decoration: none;
+                    text-align: center;
+                }
+                .button:hover {
+                    background-color: #0056b3;
+                }
+            </style>
+        </head>
+        <body>
+            <h1>Total Fantasy Points</h1>
+            <a href="/FantasyResearchAssistant/${username}/manage" class="button">Back</a>
+        </body>
+        </html>
+    `);
+});
+
+  
+
+
 
 app.get('/FantasyResearchAssistant/:username/create-team', (req, res) => {
     const username = req.params.username;
@@ -597,9 +787,6 @@ app.post('/FantasyResearchAssistant/:username/delete-team', (req, res) => {
         `);
     });
 });
-
-
-
 
 
 
