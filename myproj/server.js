@@ -289,51 +289,148 @@ app.get('/FantasyResearchAssistant/:username/manage', (req, res) => {
 });
 
 
-
 app.get('/FantasyResearchAssistant/:username/best-player', (req, res) => {
     const { username } = req.params;
-    res.send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Best Player</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    height: 100vh;
-                    margin: 0;
-                    background-color: #f4f4f4;
-                }
-                .button {
-                    background-color: #007BFF;
-                    color: white;
-                    border: none;
-                    padding: 15px 20px;
-                    margin: 10px;
-                    border-radius: 5px;
-                    font-size: 16px;
-                    cursor: pointer;
-                    text-decoration: none;
-                    text-align: center;
-                }
-                .button:hover {
-                    background-color: #0056b3;
-                }
-            </style>
-        </head>
-        <body>
-            <h1>Best Player</h1>
-            <a href="/FantasyResearchAssistant/${username}/manage" class="button">Back</a>
-        </body>
-        </html>
-    `);
+    const limit = req.query.limit || 10; // Default to 10 players if not provided
+
+    // Query to fetch best players with a limit
+    const query = `
+        SELECT 
+            p.name AS player_name,
+            p.position,
+            t.team_name,
+            SUM(g.points_scored) AS total_points
+        FROM 
+            Player p
+        JOIN 
+            Games g ON p.player_id = g.player_id
+        JOIN 
+            Team t ON p.team_id = t.team_id
+        GROUP BY 
+            p.player_id, p.name, p.position, t.team_name
+        HAVING 
+            SUM(g.points_scored) > (
+                SELECT AVG(total_points)
+                FROM (
+                    SELECT SUM(g2.points_scored) AS total_points
+                    FROM Player p2
+                    JOIN Games g2 ON p2.player_id = g2.player_id
+                    GROUP BY p2.player_id
+                ) AS player_totals
+            )
+        ORDER BY 
+            total_points DESC
+        LIMIT ?;
+    `;
+
+    // Connect to the database and execute the query
+    connection.query(query, [parseInt(limit)], (err, results) => {
+        if (err) {
+            console.error("Error executing query:", err);
+            res.status(500).send('<h1>Error fetching best players.</h1>');
+            return;
+        }
+
+        // Generate HTML table for results
+        const playerTable = results.map(player => `
+            <tr>
+                <td>${player.player_name}</td>
+                <td>${player.position}</td>
+                <td>${player.team_name}</td>
+                <td>${player.total_points}</td>
+            </tr>
+        `).join('');
+
+        // Send response
+        res.send(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Best Player</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: flex-start;
+                        height: 100vh;
+                        margin: 0;
+                        background-color: #f4f4f4;
+                        padding: 20px;
+                    }
+                    h1 {
+                        margin-bottom: 20px;
+                    }
+                    form {
+                        margin-bottom: 20px;
+                    }
+                    input[type="number"] {
+                        padding: 5px;
+                        font-size: 16px;
+                        width: 60px;
+                    }
+                    table {
+                        border-collapse: collapse;
+                        width: 80%;
+                        margin-top: 20px;
+                    }
+                    th, td {
+                        border: 1px solid #ddd;
+                        text-align: center;
+                        padding: 8px;
+                    }
+                    th {
+                        background-color: #007BFF;
+                        color: white;
+                    }
+                    .button {
+                        background-color: #007BFF;
+                        color: white;
+                        border: none;
+                        padding: 10px 15px;
+                        margin-top: 20px;
+                        border-radius: 5px;
+                        font-size: 16px;
+                        cursor: pointer;
+                        text-decoration: none;
+                        text-align: center;
+                    }
+                    .button:hover {
+                        background-color: #0056b3;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Best Players</h1>
+                <form method="get" action="/FantasyResearchAssistant/${username}/best-player">
+                    <label for="limit">Number of Players:</label>
+                    <input type="number" id="limit" name="limit" value="${limit}" min="1">
+                    <button type="submit" class="button">Update</button>
+                </form>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Player Name</th>
+                            <th>Position</th>
+                            <th>Team Name</th>
+                            <th>Total Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${playerTable || '<tr><td colspan="4">No players found.</td></tr>'}
+                    </tbody>
+                </table>
+                <a href="/FantasyResearchAssistant/${username}/manage" class="button">Back</a>
+            </body>
+            </html>
+        `);
+    });
 });
+
+
 
 app.get('/FantasyResearchAssistant/:username/highest-scoring-player', (req, res) => {
     const { username } = req.params;
