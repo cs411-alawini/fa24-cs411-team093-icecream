@@ -197,22 +197,27 @@ app.get('/FantasyResearchAssistant/:username/manage', (req, res) => {
                 res.status(500).send('<h1>Error fetching fantasy teams.</h1>');
                 return;
             }
-            // Generate HTML for the fantasy teams
-            const teamList = teamResults.map(team => `
-                <li>
-                    <strong>${team.fantasy_team_name}</strong> (Roster Size: ${team.roster_size})
-                </li>
-            `).join('');
+
+            // Generate HTML for the fantasy teams as links
+            const teamList = teamResults.map(team => 
+                `<li>
+                    <a href="/FantasyResearchAssistant/${username}/manage/${team.fantasy_team_name}">
+                        <strong>${team.fantasy_team_name}</strong>
+                    </a> 
+                    (Roster Size: ${team.roster_size})
+                </li>`
+            ).join('');
 
             // Serve the Manage Fantasy Teams page
-            res.send(`
-                <!DOCTYPE html>
+            res.send(
+                `<!DOCTYPE html>
                 <html lang="en">
                 <head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>Manage Fantasy Teams</title>
                     <style>
+                        /* Add your CSS styles here */
                         body {
                             font-family: Arial, sans-serif;
                             display: flex;
@@ -251,6 +256,13 @@ app.get('/FantasyResearchAssistant/:username/manage', (req, res) => {
                             font-size: 18px;
                             color: #444;
                         }
+                        li a {
+                            text-decoration: none;
+                            color: #007BFF;
+                        }
+                        li a:hover {
+                            text-decoration: underline;
+                        }
                         .logout-btn {
                             position: absolute;
                             top: 20px;
@@ -282,11 +294,202 @@ app.get('/FantasyResearchAssistant/:username/manage', (req, res) => {
                     <a href="/FantasyResearchAssistant/${username}/most-consistent-player" class="button">Most Consistent Player</a>
                     <a href="/FantasyResearchAssistant/${username}/total-fantasy-points" class="button">Total Points</a>
                 </body>
-                </html>
-            `);
+                </html>`
+            );
         });
     });
 });
+
+app.get('/FantasyResearchAssistant/:username/manage/:teamName', (req, res) => {
+    const { username, teamName } = req.params;
+
+    // Fetch the team ID for the specified teamName and username
+    const teamSql = `
+        SELECT ft.fantasy_team_id 
+        FROM FantasyTeam ft
+        JOIN UserInfo ui ON ft.user_id = ui.user_id
+        WHERE ui.username = ? AND ft.fantasy_team_name = ?`;
+
+    connection.query(teamSql, [username, teamName], (err, teamResult) => {
+        if (err || teamResult.length === 0) {
+            console.log("Error fetching fantasy team ID:", err);
+            return res.status(500).send('<h1>Error fetching fantasy team information.</h1>');
+        }
+
+        const fantasyTeamId = teamResult[0].fantasy_team_id;
+
+        // Fetch players in this team
+        const currentPlayersSql = `
+            SELECT p.player_id, p.name, p.team_id, p.position, p.age, p.height, p.weight
+            FROM FantasyTeamPlayer ftp
+            JOIN Player p ON ftp.player_id = p.player_id
+            WHERE ftp.fantasy_team_id = ?`;
+
+        connection.query(currentPlayersSql, [fantasyTeamId], (err, currentPlayers) => {
+            if (err) {
+                console.log("Error fetching current players:", err);
+                return res.status(500).send('<h1>Error fetching current players.</h1>');
+            }
+
+            // Fetch 30 players not already in the team
+            const availablePlayersSql = `
+                SELECT p.player_id, p.name, p.team_id, p.position, p.age, p.height, p.weight
+                FROM Player p
+                WHERE NOT EXISTS (
+                    SELECT 1 
+                    FROM FantasyTeamPlayer ftp 
+                    WHERE ftp.player_id = p.player_id AND ftp.fantasy_team_id = ?
+                )
+                LIMIT 30`;
+
+            connection.query(availablePlayersSql, [fantasyTeamId], (err, availablePlayers) => {
+                if (err) {
+                    console.log("Error fetching available players:", err);
+                    return res.status(500).send('<h1>Error fetching available players.</h1>');
+                }
+
+                // Generate HTML for current players
+                const currentPlayersList = currentPlayers.map(player => 
+                    `<tr>
+                        <td>${player.player_id}</td>
+                        <td>${player.name}</td>
+                        <td>${player.team_id}</td>
+                        <td>${player.position}</td>
+                        <td>${player.age}</td>
+                        <td>${player.height}</td>
+                        <td>${player.weight}</td>
+                        <td>
+                            <form action="/FantasyResearchAssistant/${username}/manage/${teamName}/remove-player" method="POST">
+                                <input type="hidden" name="player_id" value="${player.player_id}">
+                                <button type="submit" style="color:red;">Remove</button>
+                            </form>
+                        </td>
+                    </tr>`
+                ).join('');
+
+                // Generate HTML for available players
+                const availablePlayersList = availablePlayers.map(player => 
+                    `<tr>
+                        <td>${player.player_id}</td>
+                        <td>${player.name}</td>
+                        <td>${player.team_id}</td>
+                        <td>${player.position}</td>
+                        <td>${player.age}</td>
+                        <td>${player.height}</td>
+                        <td>${player.weight}</td>
+                        <td>
+                            <form action="/FantasyResearchAssistant/${username}/manage/${teamName}/add-player" method="POST">
+                                <input type="hidden" name="player_id" value="${player.player_id}">
+                                <button type="submit">Add</button>
+                            </form>
+                        </td>
+                    </tr>`
+                ).join('');
+
+                res.send(
+                    `<!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Manage Team: ${teamName}</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                margin: 0;
+                                padding: 20px;
+                                background-color: #f4f4f4;
+                            }
+                            h1 {
+                                text-align: center;
+                                color: #333;
+                            }
+                            table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                margin-bottom: 20px;
+                            }
+                            table, th, td {
+                                border: 1px solid #ddd;
+                            }
+                            th, td {
+                                padding: 10px;
+                                text-align: center;
+                            }
+                            th {
+                                background-color: #007BFF;
+                                color: white;
+                            }
+                            .button {
+                                display: block;
+                                width: max-content;
+                                margin: 10px auto;
+                                text-decoration: none;
+                                background-color: #007BFF;
+                                color: white;
+                                padding: 10px 20px;
+                                border-radius: 5px;
+                                font-size: 16px;
+                            }
+                            .button:hover {
+                                background-color: #0056b3;
+                            }
+                            button {
+                                background-color: #007BFF;
+                                color: white;
+                                border: none;
+                                padding: 5px 10px;
+                                border-radius: 5px;
+                                cursor: pointer;
+                            }
+                            button:hover {
+                                background-color: #0056b3;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Manage Team: ${teamName}</h1>
+                        <h2>Current Players</h2>
+                        <table>
+                            <tr>
+                                <th>Player ID</th>
+                                <th>Name</th>
+                                <th>Team ID</th>
+                                <th>Position</th>
+                                <th>Age</th>
+                                <th>Height</th>
+                                <th>Weight</th>
+                                <th>Action</th>
+                            </tr>
+                            ${currentPlayersList || '<tr><td colspan="8">No players in this team.</td></tr>'}
+                        </table>
+
+                        <h2>Add New Players</h2>
+                        <table>
+                            <tr>
+                                <th>Player ID</th>
+                                <th>Name</th>
+                                <th>Team ID</th>
+                                <th>Position</th>
+                                <th>Age</th>
+                                <th>Height</th>
+                                <th>Weight</th>
+                                <th>Action</th>
+                            </tr>
+                            ${availablePlayersList || '<tr><td colspan="8">No available players to add.</td></tr>'}
+                        </table>
+
+                        <a href="/FantasyResearchAssistant/${username}/manage" class="button">Back to Teams</a>
+                        <a href="/FantasyResearchAssistant/login" class="button" style="background-color: #ff4d4d;">Logout</a>
+                    </body>
+                    </html>`
+                );
+            });
+        });
+    });
+});
+
+
 
 
 app.get('/FantasyResearchAssistant/:username/best-player', (req, res) => {
@@ -429,6 +632,74 @@ app.get('/FantasyResearchAssistant/:username/best-player', (req, res) => {
         `);
     });
 });
+
+app.post('/FantasyResearchAssistant/:username/manage/:teamName/add-player', (req, res) => {
+    const { username, teamName } = req.params;
+    const { player_id } = req.body;
+
+    // Fetch the team ID for the specified teamName and username
+    const teamSql = `
+        SELECT ft.fantasy_team_id 
+        FROM FantasyTeam ft
+        JOIN UserInfo ui ON ft.user_id = ui.user_id
+        WHERE ui.username = ? AND ft.fantasy_team_name = ?`;
+
+    connection.query(teamSql, [username, teamName], (err, teamResult) => {
+        if (err || teamResult.length === 0) {
+            console.log("Error fetching fantasy team ID:", err);
+            return res.status(500).send('<h1>Error fetching fantasy team information.</h1>');
+        }
+
+        const fantasyTeamId = teamResult[0].fantasy_team_id;
+
+        // Insert the player into the FantasyTeamPlayer table
+        const insertSql = `
+            INSERT INTO FantasyTeamPlayer (fantasy_team_id, player_id)
+            VALUES (?, ?)`;
+
+        connection.query(insertSql, [fantasyTeamId, player_id], (err, result) => {
+            if (err) {
+                console.log("Error adding player to fantasy team:", err);
+                return res.status(500).send('<h1>Error adding player to the team.</h1>');
+            }
+
+            console.log("Player added successfully:", result);
+            res.redirect(`/FantasyResearchAssistant/${username}/manage/${teamName}`);
+        });
+    });
+});
+
+app.post('/FantasyResearchAssistant/:username/manage/:teamName/remove-player', (req, res) => {
+    const { username, teamName } = req.params;
+    const { player_id } = req.body;
+
+    const teamSql = `
+        SELECT ft.fantasy_team_id 
+        FROM FantasyTeam ft
+        JOIN UserInfo ui ON ft.user_id = ui.user_id
+        WHERE ui.username = ? AND ft.fantasy_team_name = ?`;
+
+    connection.query(teamSql, [username, teamName], (err, teamResult) => {
+        if (err || teamResult.length === 0) {
+            console.log("Error fetching fantasy team ID:", err);
+            return res.status(500).send('<h1>Error removing player from the team.</h1>');
+        }
+
+        const fantasyTeamId = teamResult[0].fantasy_team_id;
+
+        const deleteSql = `DELETE FROM FantasyTeamPlayer WHERE fantasy_team_id = ? AND player_id = ?`;
+        connection.query(deleteSql, [fantasyTeamId, player_id], (err, result) => {
+            if (err) {
+                console.log("Error removing player:", err);
+                return res.status(500).send('<h1>Error removing player from the team.</h1>');
+            }
+
+            console.log("Player removed successfully:", result);
+            res.redirect(`/FantasyResearchAssistant/${username}/manage/${teamName}`);
+        });
+    });
+});
+
 
 
 
