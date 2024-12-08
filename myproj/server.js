@@ -720,7 +720,7 @@ app.get('/FantasyResearchAssistant/:username/manage/:teamName', (req, res) => {
                 const currentPlayersList = currentPlayers.map(player => 
                     `<tr>
                         <td>${player.player_id}</td>
-                        <td>${player.name}</td>
+                        <td><a href="/FantasyResearchAssistant/${username}/manage/${teamName}/player-stats/${player.name}">${player.name}</a></td>
                         <td>${player.team_id}</td>
                         <td>${player.position}</td>
                         <td>${player.age}</td>
@@ -912,6 +912,118 @@ app.get('/FantasyResearchAssistant/:username/manage/:teamName', (req, res) => {
                 );
                 
             });
+        });
+    });
+});
+
+app.get('/FantasyResearchAssistant/:username/manage/:teamName/player-stats/:player', (req, res) => {
+    const { player } = req.params;
+
+    // Fetch player ID from name
+    const playerSql = `SELECT player_id FROM Player WHERE name = ?`;
+    connection.query(playerSql, [player], (err, playerResult) => {
+        if (err || playerResult.length === 0) {
+            console.log("Error fetching player ID:", err);
+            return res.status(404).send('<h1>Player not found.</h1>');
+        }
+
+        const playerId = playerResult[0].player_id;
+        const gameId = 1; // Replace with dynamic GameID as needed
+
+        // Call stored procedure
+        const statsSql = `CALL GetPlayerStatsTransaction(?, ?)`;
+        connection.query(statsSql, [playerId, gameId], (err, statsResult) => {
+            if (err) {
+                console.log("Error executing stored procedure:", err);
+                return res.status(500).send('<h1>Error fetching player stats.</h1>');
+            }
+
+            const stats = statsResult[0];
+            if (stats.length === 0) {
+                return res.send('<h1>No stats available for this player.</h1>');
+            }
+
+            const statsTable = stats.map(stat => 
+                `<tr>
+                    <td>${stat.game_id}</td>
+                    <td>${stat.points_scored}</td>
+                    <td>${stat.passing_yards}</td>
+                    <td>${stat.rushing_yards}</td>
+                    <td>${stat.receiving_yards}</td>
+                    <td>${stat.touchdowns}</td>
+                    <td>${stat.receptions}</td>
+                    <td>${stat.fumbles_lost}</td>
+                    <td>${stat.expected_points}</td>
+                </tr>`
+            ).join('');
+
+            res.send(
+                `<!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Player Stats: ${player}</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 0;
+                            padding: 0;
+                            background-color: #f4f4f4;
+                            color: #333;
+                        }
+                        table {
+                            width: 90%;
+                            margin: 20px auto;
+                            border-collapse: collapse;
+                            background-color: white;
+                        }
+                        th, td {
+                            border: 1px solid #ddd;
+                            text-align: left;
+                            padding: 8px;
+                        }
+                        th {
+                            background-color: #007BFF;
+                            color: white;
+                        }
+                        tr:nth-child(even) {
+                            background-color: #f2f2f2;
+                        }
+                        .button {
+                            background-color: #007BFF;
+                            color: white;
+                            padding: 10px 20px;
+                            text-decoration: none;
+                            border-radius: 5px;
+                            display: inline-block;
+                            margin: 20px;
+                        }
+                        .button:hover {
+                            background-color: #0056b3;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>Player Stats: ${player}</h1>
+                    <table>
+                        <tr>
+                            <th>Game ID</th>
+                            <th>Points Scored</th>
+                            <th>Passing Yards</th>
+                            <th>Rushing Yards</th>
+                            <th>Receiving Yards</th>
+                            <th>Touchdowns</th>
+                            <th>Receptions</th>
+                            <th>Fumbles Lost</th>
+                            <th>Expected Points</th>
+                        </tr>
+                        ${statsTable}
+                    </table>
+                    <a href="/FantasyResearchAssistant/${req.params.username}/manage/${req.params.teamName}" class="button">Back to Team</a>
+                </body>
+                </html>`
+            );
         });
     });
 });
